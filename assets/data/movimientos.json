@@ -1,0 +1,4 @@
+[
+  { "id": 1, "tipo": "entrada", "productoId": 1, "cantidad": 50, "fecha": "2026-08-01T10:00:00" },
+  { "id": 2, "tipo": "venta", "productoId": 1, "cantidad": 1, "fecha": "2026-08-08T09:15:00" }
+]

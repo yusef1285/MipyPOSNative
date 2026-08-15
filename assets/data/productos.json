@@ -1,0 +1,4 @@
+[
+  { "id": 1, "categoriaId": 1, "subcategoriaId": 1, "nombre": "Café Americano", "precio": 1.50, "stock": 100, "foto":"" },
+  { "id": 2, "categoriaId": 1, "subcategoriaId": 1, "nombre": "Café con Leche", "precio": 2.00, "stock": 80, "foto":"" }
+]
