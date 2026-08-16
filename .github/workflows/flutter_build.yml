@@ -32,12 +32,10 @@ jobs:
           echo "$KEYSTORE" | base64 --decode > android/app/release.keystore
 
       - name: Build signed APK
-        run: |
-          flutter build apk --release
+        run: flutter build apk --release
 
       - name: Build signed AAB
-        run: |
-          flutter build appbundle --release
+        run: flutter build appbundle --release
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3

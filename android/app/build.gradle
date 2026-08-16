@@ -1,15 +1,6 @@
 plugins {
-    id "com.android.application"
-    id "kotlin-android"
-    id "dev.flutter.flutter-gradle-plugin"
-}
-
-def localProperties = new Properties()
-def localPropertiesFile = rootProject.file('local.properties')
-if (localPropertiesFile.exists()) {
-    localPropertiesFile.withReader('UTF-8') { reader ->
-        localProperties.load(reader)
-    }
+    id 'com.android.application'
+    id 'kotlin-android'
 }
 
 android {
@@ -18,35 +9,25 @@ android {
 
     defaultConfig {
         applicationId "com.mipypos.native"
-        minSdkVersion flutter.minSdkVersion
+        minSdk 21
         targetSdk 34
         versionCode 1
-        versionName "1.0.0"
-    }
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-    kotlinOptions {
-        jvmTarget = "1.8"
+        versionName "1.0"
     }
 
     buildTypes {
         release {
-            signingConfig signingConfigs.debug
             minifyEnabled false
             shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 }
-
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${rootProject.ext.kotlin_version}"
 }
 
-// Apply Flutter tooling if flutter SDK path is available in local.properties
 def flutterRoot = localProperties.getProperty('flutter.sdk')
 if (flutterRoot != null) {
     apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
