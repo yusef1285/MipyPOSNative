@@ -6,11 +6,7 @@
 build/
 
 # Android
-**/android/local.properties
 **/android/.gradle
-**/android/captures/
-**/android/gradlew
-**/android/gradlew.bat
 
 # iOS
 **/ios/Pods/
