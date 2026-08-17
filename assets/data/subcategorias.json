@@ -1,5 +1,0 @@
-[
-  { "id": 1, "categoriaId": 1, "nombre": "Cafés" },
-  { "id": 2, "categoriaId": 1, "nombre": "Tés" },
-  { "id": 3, "categoriaId": 2, "nombre": "Bocadillos" }
-]
