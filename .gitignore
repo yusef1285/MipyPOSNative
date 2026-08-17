@@ -1,0 +1,31 @@
+# Flutter
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+
+# Android
+android/.gradle/
+
+# iOS
+ios/Pods/
+ios/Flutter/.last_build_id
+
+# VS Code
+.vscode/
+
+# IntelliJ
+.idea/
+*.iml
+
+# MacOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Keystore (MUY IMPORTANTE)
+release.keystore
+*.jks
+*.keystore
