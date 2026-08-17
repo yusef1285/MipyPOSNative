@@ -6,11 +6,11 @@
 build/
 
 # Android
-**/android/.gradle
+android/.gradle/
 
 # iOS
-**/ios/Pods/
-**/ios/Flutter/.last_build_id
+ios/Pods/
+ios/Flutter/.last_build_id
 
 # VS Code
 .vscode/
