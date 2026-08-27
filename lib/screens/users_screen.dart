@@ -33,48 +33,54 @@ class _UsersScreenState extends State<UsersScreen> {
 
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Crear usuario'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: userCtrl,
-              decoration: const InputDecoration(labelText: 'Usuario'),
+      builder: (_) => StatefulBuilder(
+        builder: (context, setStateDialog) {
+          return AlertDialog(
+            title: const Text('Crear usuario'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: userCtrl,
+                  decoration: const InputDecoration(labelText: 'Usuario'),
+                ),
+                TextField(
+                  controller: passCtrl,
+                  decoration: const InputDecoration(labelText: 'Contraseña'),
+                ),
+                DropdownButtonFormField<String>(
+                  value: role,
+                  decoration: const InputDecoration(labelText: 'Rol'),
+                  items: roles
+                      .map((r) => DropdownMenuItem(value: r, child: Text(r)))
+                      .toList(),
+                  onChanged: (v) {
+                    setStateDialog(() => role = v!);
+                  },
+                ),
+              ],
             ),
-            TextField(
-              controller: passCtrl,
-              decoration: const InputDecoration(labelText: 'Contraseña'),
-            ),
-            DropdownButtonFormField<String>(
-              initialValue: role,
-              items: roles
-                  .map((r) => DropdownMenuItem(value: r, child: Text(r)))
-                  .toList(),
-              onChanged: (v) => role = v!,
-              decoration: const InputDecoration(labelText: 'Rol'),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              await DBService.upsertUser({
-                'user': userCtrl.text.trim(),
-                'pass': passCtrl.text.trim(),
-                'role': role,
-              });
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancelar'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  await DBService.upsertUser({
+                    'user': userCtrl.text.trim(),
+                    'pass': passCtrl.text.trim(),
+                    'role': role,
+                  });
 
-              Navigator.pop(context);
-              loadUsers();
-            },
-            child: const Text('Crear'),
-          ),
-        ],
+                  Navigator.pop(context);
+                  loadUsers();
+                },
+                child: const Text('Crear'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -85,44 +91,50 @@ class _UsersScreenState extends State<UsersScreen> {
 
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        title: Text('Editar usuario: ${u['user']}'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: passCtrl,
-              decoration: const InputDecoration(labelText: 'Contraseña'),
+      builder: (_) => StatefulBuilder(
+        builder: (context, setStateDialog) {
+          return AlertDialog(
+            title: Text('Editar usuario: ${u['user']}'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: passCtrl,
+                  decoration: const InputDecoration(labelText: 'Contraseña'),
+                ),
+                DropdownButtonFormField<String>(
+                  value: role,
+                  decoration: const InputDecoration(labelText: 'Rol'),
+                  items: roles
+                      .map((r) => DropdownMenuItem(value: r, child: Text(r)))
+                      .toList(),
+                  onChanged: (v) {
+                    setStateDialog(() => role = v!);
+                  },
+                ),
+              ],
             ),
-            DropdownButtonFormField<String>(
-              initialValue: role,
-              items: roles
-                  .map((r) => DropdownMenuItem(value: r, child: Text(r)))
-                  .toList(),
-              onChanged: (v) => role = v!,
-              decoration: const InputDecoration(labelText: 'Rol'),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              await DBService.upsertUser({
-                'user': u['user'],
-                'pass': passCtrl.text.trim(),
-                'role': role,
-              });
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancelar'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  await DBService.upsertUser({
+                    'user': u['user'],
+                    'pass': passCtrl.text.trim(),
+                    'role': role,
+                  });
 
-              Navigator.pop(context);
-              loadUsers();
-            },
-            child: const Text('Guardar'),
-          ),
-        ],
+                  Navigator.pop(context);
+                  loadUsers();
+                },
+                child: const Text('Guardar'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
