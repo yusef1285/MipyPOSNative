@@ -1,0 +1,54 @@
+workflows:
+  mipypos-android:
+    name: "MipyPOS – Build Android"
+    max_build_duration: 60
+    environment:
+      flutter: stable
+      vars:
+        KEYSTORE_PATH: $CM_KEYSTORE
+        KEYSTORE_PASSWORD: $CM_KEYSTORE_PASSWORD
+        KEY_ALIAS: $CM_KEY_ALIAS
+        KEY_PASSWORD: $CM_KEY_PASSWORD
+
+    scripts:
+      - name: "Instalar dependencias"
+        script: |
+          flutter pub get
+
+      - name: "Compilar APK"
+        script: |
+          flutter build apk --release
+
+      - name: "Compilar AAB"
+        script: |
+          flutter build appbundle --release
+
+      - name: "Firmar APK"
+        script: |
+          jarsigner -verbose \
+            -keystore $KEYSTORE_PATH \
+            -storepass $KEYSTORE_PASSWORD \
+            -keypass $KEY_PASSWORD \
+            build/app/outputs/flutter-apk/app-release.apk \
+            $KEY_ALIAS
+
+      - name: "Firmar AAB"
+        script: |
+          jarsigner -verbose \
+            -keystore $KEYSTORE_PATH \
+            -storepass $KEYSTORE_PASSWORD \
+            -keypass $KEY_PASSWORD \
+            build/app/outputs/bundle/release/app-release.aab \
+            $KEY_ALIAS
+
+    artifacts:
+      - build/app/outputs/flutter-apk/app-release.apk
+      - build/app/outputs/bundle/release/app-release.aab
+
+    publishing:
+      email:
+        recipients:
+          - "tu_correo@ejemplo.com"
+        notify:
+          success: true
+          failure: true

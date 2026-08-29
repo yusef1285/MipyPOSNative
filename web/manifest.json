@@ -1,35 +1,74 @@
 {
-    "name": "mipypos_native",
-    "short_name": "mipypos_native",
-    "start_url": ".",
-    "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
-    "prefer_related_applications": false,
-    "icons": [
+  "name": "MipyPOS Cafetería",
+  "short_name": "MipyPOS",
+  "description": "Gestión inteligente para tu negocio de cafetería.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0175C2",
+  "theme_color": "#004AAD",
+  "scope": "/",
+  "lang": "es-MX",
+  "icons": [
+    {
+      "src": "assets/logo/logo_mipypos_512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/logo/logo_mipypos_maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "assets/productos/product_placeholder_512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/productos/product_placeholder_maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "assets/splash/splash_3x.png",
+      "sizes": "1280x2560",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/splash/splash_land.png",
+      "sizes": "1920x1080",
+      "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Ventas",
+      "short_name": "Ventas",
+      "description": "Abrir módulo de ventas",
+      "url": "/ventas",
+      "icons": [
         {
-            "src": "icons/Icon-192.png",
-            "sizes": "192x192",
-            "type": "image/png"
-        },
-        {
-            "src": "icons/Icon-512.png",
-            "sizes": "512x512",
-            "type": "image/png"
-        },
-        {
-            "src": "icons/Icon-maskable-192.png",
-            "sizes": "192x192",
-            "type": "image/png",
-            "purpose": "maskable"
-        },
-        {
-            "src": "icons/Icon-maskable-512.png",
-            "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "maskable"
+          "src": "assets/productos/product_placeholder_512.png",
+          "sizes": "512x512"
         }
-    ]
+      ]
+    },
+    {
+      "name": "Inventario",
+      "short_name": "Inventario",
+      "description": "Abrir módulo de inventario",
+      "url": "/inventario",
+      "icons": [
+        {
+          "src": "assets/productos/product_placeholder_maskable.png",
+          "sizes": "512x512"
+        }
+      ]
+    }
+  ]
 }
