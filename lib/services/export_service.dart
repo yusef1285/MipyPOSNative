@@ -4,9 +4,32 @@ import 'package:path_provider/path_provider.dart';
 import 'db_service.dart';
 
 class ExportService {
+  static Future<Directory> _getSafeWriteDirectory() async {
+    try {
+      final downloads = await getDownloadsDirectory();
+      if (downloads != null) return downloads;
+    } catch (_) {}
+
+    try {
+      final docs = await getApplicationDocumentsDirectory();
+      if (docs.path.isNotEmpty) return docs;
+    } catch (_) {}
+
+    try {
+      final support = await getApplicationSupportDirectory();
+      if (support.path.isNotEmpty) return support;
+    } catch (_) {}
+
+    final fallback = Directory('${Directory.current.path}/mipypos_exports');
+    if (!await fallback.exists()) {
+      await fallback.create(recursive: true);
+    }
+    return fallback;
+  }
+
   static Future<String> _getPath(String filename) async {
-    final dir = await getDownloadsDirectory();
-    return "${dir!.path}/$filename";
+    final dir = await _getSafeWriteDirectory();
+    return "${dir.path}/$filename";
   }
 
   static Future<void> _saveTxt(String filename, String content) async {

@@ -25,12 +25,14 @@ class RoleSelectScreen extends StatelessWidget {
             ElevatedButton.icon(
               icon: const Icon(Icons.admin_panel_settings),
               label: const Text('Administrador'),
-              onPressed: () {
-                auth.login({'role': 'admin'});
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const HomeShell()),
-                );
+              onPressed: () async {
+                await auth.login('admin', '1234');
+                if (context.mounted) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const HomeShell()),
+                  );
+                }
               },
             ),
 
@@ -39,12 +41,14 @@ class RoleSelectScreen extends StatelessWidget {
             ElevatedButton.icon(
               icon: const Icon(Icons.supervisor_account),
               label: const Text('Supervisor'),
-              onPressed: () {
-                auth.login({'role': 'supervisor'});
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const HomeShell()),
-                );
+              onPressed: () async {
+                await auth.login('admin', '1234');
+                if (context.mounted) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const HomeShell()),
+                  );
+                }
               },
             ),
 
@@ -53,12 +57,14 @@ class RoleSelectScreen extends StatelessWidget {
             ElevatedButton.icon(
               icon: const Icon(Icons.person),
               label: const Text('Cajero'),
-              onPressed: () {
-                auth.login({'role': 'cajero'});
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const HomeShell()),
-                );
+              onPressed: () async {
+                await auth.login('cajero', '1234');
+                if (context.mounted) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const HomeShell()),
+                  );
+                }
               },
             ),
           ],

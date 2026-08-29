@@ -7,11 +7,13 @@ import '../widgets/cash_count_widget.dart';
 
 class CajaWizardScreen extends StatefulWidget {
   final int sessionId;
+  final Map<String, dynamic> sessionData;
   final Map<String, dynamic> resumenVentas;
 
   const CajaWizardScreen({
     super.key,
     required this.sessionId,
+    required this.sessionData,
     required this.resumenVentas,
   });
 
@@ -38,6 +40,7 @@ class _CajaWizardScreenState extends State<CajaWizardScreen> {
   Map<String, dynamic> stockStart = {};
   Map<String, dynamic> stockFinalInput = {};
   Map<String, dynamic> entradasDelDia = {};
+  Map<String, dynamic> ventasDelDia = {};
 
   Map<String, dynamic> productsEnd = {};
   Map<String, dynamic> productsDiff = {};
@@ -61,8 +64,12 @@ class _CajaWizardScreenState extends State<CajaWizardScreen> {
     setState(() => _loading = true);
 
     productos = await ProductRepository.getAll();
-    stockStart = await ProductRepository.getStockStartMap();
+    stockStart = Map<String, dynamic>.from((widget.sessionData['products_start'] ?? {}) as Map? ?? {});
+    if (stockStart.isEmpty) {
+      stockStart = await ProductRepository.getStockStartMap();
+    }
     entradasDelDia = await _calculateEntriesOfDay();
+    ventasDelDia = await _calculateSalesOfDay();
 
     for (var p in productos) {
       final name = p['name'] ?? '';
@@ -77,16 +84,23 @@ class _CajaWizardScreenState extends State<CajaWizardScreen> {
     final map = <String, double>{};
     final movements = await DBService.getMovementsOfDay();
     for (var m in movements) {
-      final productIndex = m['product_index'];
+      final type = (m['type'] ?? '').toString().toLowerCase();
+      if (type != 'entrada') continue;
+
+      final productName = (m['product_name'] ?? '').toString();
       final qty = _toDouble(m['qty']);
-      if (productIndex == null) continue;
-      final product = productos.firstWhere(
-        (p) => p['id'] == productIndex,
-        orElse: () => {'name': 'Desconocido'},
-      );
-      final name = product['name'] ?? 'Desconocido';
-      map[name] = (map[name] ?? 0.0) + qty;
+      if (productName.isEmpty) continue;
+      map[productName] = (map[productName] ?? 0.0) + qty;
     }
+    return map;
+  }
+
+  Future<Map<String, double>> _calculateSalesOfDay() async {
+    final map = <String, double>{};
+    final sales = await DBService.getProductSalesQtyOfDay();
+    sales.forEach((name, qty) {
+      map[name] = qty.toDouble();
+    });
     return map;
   }
 
@@ -158,9 +172,10 @@ class _CajaWizardScreenState extends State<CajaWizardScreen> {
       final name = p['name'] ?? '';
       final initial = _toDouble(stockStart[name]);
       final entries = _toDouble(entradasDelDia[name]);
+      final sales = _toDouble(ventasDelDia[name]);
       final finalStock = _toDouble(stockFinalInput[name]);
 
-      final expected = initial + entries;
+      final expected = initial + entries - sales;
       final difference = expected - finalStock;
 
       diffs[name] = {
@@ -251,7 +266,9 @@ class _CajaWizardScreenState extends State<CajaWizardScreen> {
               final name = p['name'] ?? '';
               final start = _toDouble(stockStart[name]);
               final entries = _toDouble(entradasDelDia[name]);
-              final suggested = (p['stock'] ?? 0).toString();
+              final sales = _toDouble(ventasDelDia[name]);
+              final expected = start + entries - sales;
+              final suggested = expected.toStringAsFixed(0);
               return Card(
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
@@ -263,6 +280,7 @@ class _CajaWizardScreenState extends State<CajaWizardScreen> {
                         children: [
                           Text('Inicio: ${start.toStringAsFixed(0)}'),
                           Text('Entradas: ${entries.toStringAsFixed(0)}'),
+                          Text('Ventas: ${sales.toStringAsFixed(0)}'),
                         ],
                       ),
                       const SizedBox(width: 12),
@@ -291,7 +309,7 @@ class _CajaWizardScreenState extends State<CajaWizardScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _stepHeader('Diferencias por producto'),
-            const Text('Se calcula: stock inicial + entradas del día - stock final'),
+            const Text('Se calcula: stock inicial + entradas del día - ventas del día'),
             const SizedBox(height: 8),
             ...diffs.keys.map((name) {
               final d = diffs[name]!;

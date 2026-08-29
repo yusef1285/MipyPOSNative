@@ -64,51 +64,122 @@ class _LoginScreenState extends State<LoginScreen> {
     final auth = context.watch<AuthController>();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Iniciar sesión')),
-      body: Center(
-        child: SizedBox(
-          width: 420,
-          child: Card(
-            margin: const EdgeInsets.all(24),
-            child: Padding(
-              padding: const EdgeInsets.all(18),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('Bienvenido', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: userCtrl,
-                    decoration: const InputDecoration(labelText: 'Usuario'),
-                    textInputAction: TextInputAction.next,
-                    onSubmitted: (_) => FocusScope.of(context).nextFocus(),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: passCtrl,
-                    decoration: const InputDecoration(labelText: 'Contraseña'),
-                    obscureText: true,
-                    textInputAction: TextInputAction.done,
-                    onSubmitted: (_) => _doLogin(),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Checkbox(value: remember, onChanged: (v) => setState(() => remember = v ?? false)),
-                      const Text('Recordarme'),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: processing || auth.isLoading ? null : _doLogin,
-                      child: processing || auth.isLoading
-                          ? const SizedBox(height: 16, width: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : const Text('Entrar'),
+      appBar: AppBar(
+        title: const Text('Iniciar sesión'),
+        automaticallyImplyLeading: false,
+      ),
+      body: AnimatedContainer(
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOutCubic,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFEEF4FF),
+              Color(0xFFF8FAFC),
+            ],
+          ),
+        ),
+        child: Center(
+          child: AnimatedOpacity(
+            opacity: 1,
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeOut,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 440),
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween<double>(begin: 0.94, end: 1),
+                  duration: const Duration(milliseconds: 420),
+                  curve: Curves.easeOutBack,
+                  builder: (context, value, child) {
+                    return Transform.scale(
+                      scale: value,
+                      child: child,
+                    );
+                  },
+                  child: Card(
+                    elevation: 0,
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const Icon(
+                            Icons.storefront_rounded,
+                            size: 70,
+                            color: Color(0xFF2563EB),
+                          ),
+                          const SizedBox(height: 18),
+                          Text(
+                            'Bienvenido',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Accede a tu panel POS profesional',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          TextField(
+                            controller: userCtrl,
+                            decoration: const InputDecoration(
+                              labelText: 'Usuario',
+                              prefixIcon: Icon(Icons.person_outline_rounded),
+                            ),
+                            textInputAction: TextInputAction.next,
+                            onSubmitted: (_) => FocusScope.of(context).nextFocus(),
+                          ),
+                          const SizedBox(height: 14),
+                          TextField(
+                            controller: passCtrl,
+                            decoration: const InputDecoration(
+                              labelText: 'Contraseña',
+                              prefixIcon: Icon(Icons.lock_outline_rounded),
+                            ),
+                            obscureText: true,
+                            textInputAction: TextInputAction.done,
+                            onSubmitted: (_) => _doLogin(),
+                          ),
+                          const SizedBox(height: 14),
+                          Row(
+                            children: [
+                              Checkbox(
+                                value: remember,
+                                onChanged: (v) => setState(() => remember = v ?? false),
+                              ),
+                              const Expanded(child: Text('Recordarme')),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          FilledButton.icon(
+                            onPressed: processing || auth.isLoading ? null : _doLogin,
+                            icon: processing || auth.isLoading
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Icon(Icons.login_rounded),
+                            label: Text(processing || auth.isLoading ? 'Entrando...' : 'Entrar'),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ],
+                ),
               ),
             ),
           ),

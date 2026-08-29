@@ -17,8 +17,14 @@ class ShiftCloseScreen extends StatelessWidget {
 
   Future<void> exportShiftCSV(
       Map<String, dynamic> resumen, double contado) async {
-    final dir = await getDownloadsDirectory();
-    final file = File('${dir!.path}/cierre_turno_mipypos.csv');
+    Directory dir;
+    try {
+      final downloads = await getDownloadsDirectory();
+      dir = downloads ?? await getApplicationDocumentsDirectory();
+    } catch (_) {
+      dir = await getApplicationDocumentsDirectory();
+    }
+    final file = File('${dir.path}/cierre_turno_mipypos.csv');
 
     final buffer = StringBuffer();
     buffer.writeln("fecha,ventas,efectivo,transferencia,contado,diferencia");
@@ -56,8 +62,15 @@ class ShiftCloseScreen extends StatelessWidget {
       contado - (resumen['efectivo'] + resumen['transferencia']),
     ]);
 
-    final dir = await getDownloadsDirectory();
-    final file = File('${dir!.path}/cierre_turno_mipypos.xlsx');
+    Directory dir;
+    try {
+      final downloads = await getDownloadsDirectory();
+      dir = downloads ?? await getApplicationDocumentsDirectory();
+    } catch (_) {
+      dir = await getApplicationDocumentsDirectory();
+    }
+    final file = File('${dir.path}/cierre_turno_mipypos.xlsx');
+    await file.parent.create(recursive: true);
     await file.writeAsBytes(excel.encode()!);
   }
 
@@ -92,8 +105,15 @@ class ShiftCloseScreen extends StatelessWidget {
       ),
     );
 
-    final dir = await getDownloadsDirectory();
-    final file = File('${dir!.path}/cierre_turno_mipypos.pdf');
+    Directory dir;
+    try {
+      final downloads = await getDownloadsDirectory();
+      dir = downloads ?? await getApplicationDocumentsDirectory();
+    } catch (_) {
+      dir = await getApplicationDocumentsDirectory();
+    }
+    final file = File('${dir.path}/cierre_turno_mipypos.pdf');
+    await file.parent.create(recursive: true);
     await file.writeAsBytes(await pdf.save());
   }
 

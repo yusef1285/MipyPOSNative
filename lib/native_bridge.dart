@@ -8,7 +8,7 @@ import 'services/db_service.dart';
 
 class NativeBridge {
   static const MethodChannel _channel =
-      MethodChannel('com.mipypos.native/logic');
+      MethodChannel('com.mipypos.app/logic');
 
   /// Debe llamarse temprano desde `main()` después de inicializar servicios (Hive, DBService, etc.)
   static void setup() {

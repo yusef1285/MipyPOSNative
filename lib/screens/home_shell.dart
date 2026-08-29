@@ -44,8 +44,8 @@ class _HomeShellState extends State<HomeShell> {
     pages.add(const CajaSessionsScreen());
     nav.add(const NavigationDestination(icon: Icon(Icons.money), label: 'Caja'));
 
-    // PRIMARY
-    if (appMode == 'primary') {
+    // DEMO
+    if (appMode == 'demo') {
       if (auth.isAdmin || auth.isSupervisor) {
         pages.add(const DashboardScreen());
         nav.add(const NavigationDestination(icon: Icon(Icons.dashboard), label: 'Dashboard'));

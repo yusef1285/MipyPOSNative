@@ -30,7 +30,7 @@ class DBService {
 
     // Inicializar modo si no existe
     if (_config.get('app_mode') == null) {
-      await _config.put('app_mode', 'primary');
+      await _config.put('app_mode', 'demo');
     }
 
     // Seed users si no existen
@@ -74,6 +74,51 @@ class DBService {
         }
       } finally {
         await box.close();
+      }
+    }
+  }
+
+  static Future<void> clearAll() async {
+    try {
+      await _users.clear();
+      await _products.clear();
+      await _sales.clear();
+      await _saleItems.clear();
+      await _cashSessions.clear();
+      await _areas.clear();
+      await _movements.clear();
+      await _config.clear();
+      await _config.put('app_mode', 'demo');
+      await seedUsers();
+    } catch (_) {
+      final usersBox = await Hive.openBox('users');
+      final productsBox = await Hive.openBox('products');
+      final salesBox = await Hive.openBox('sales');
+      final saleItemsBox = await Hive.openBox('sale_items');
+      final cashSessionsBox = await Hive.openBox('cash_sessions');
+      final areasBox = await Hive.openBox('areas');
+      final movementsBox = await Hive.openBox('movements');
+      final configBox = await Hive.openBox('config');
+
+      try {
+        await usersBox.clear();
+        await productsBox.clear();
+        await salesBox.clear();
+        await saleItemsBox.clear();
+        await cashSessionsBox.clear();
+        await areasBox.clear();
+        await movementsBox.clear();
+        await configBox.clear();
+        await configBox.put('app_mode', 'demo');
+      } finally {
+        await usersBox.close();
+        await productsBox.close();
+        await salesBox.close();
+        await saleItemsBox.close();
+        await cashSessionsBox.close();
+        await areasBox.close();
+        await movementsBox.close();
+        await configBox.close();
       }
     }
   }
@@ -122,9 +167,11 @@ class DBService {
 
   static String getAppMode() {
     try {
-      return _config.get('app_mode', defaultValue: 'primary') as String;
+      final value = _config.get('app_mode', defaultValue: 'demo');
+      final mode = value?.toString() ?? 'demo';
+      return (mode == 'pro' || mode == 'demo') ? mode : 'demo';
     } catch (_) {
-      return 'primary';
+      return 'demo';
     }
   }
 
@@ -240,6 +287,8 @@ class DBService {
       v['stock'] = (v['stock'] is int) ? v['stock'] as int : int.tryParse('${v['stock']}') ?? 0;
       v['price_cash'] = (v['price_cash'] is num) ? (v['price_cash'] as num).toDouble() : double.tryParse('${v['price_cash']}') ?? 0.0;
       v['price_transfer'] = (v['price_transfer'] is num) ? (v['price_transfer'] as num).toDouble() : double.tryParse('${v['price_transfer']}') ?? 0.0;
+      v['subcategory'] = (v['subcategory'] ?? '').toString();
+      v['foto'] = (v['foto'] ?? '').toString();
       list.add(v);
     }
     return list;
@@ -249,11 +298,43 @@ class DBService {
     final id = _products.length;
     await _products.put(id, {
       'name': p['name'] ?? 'Producto ${id + 1}',
+      'subcategory': (p['subcategory'] ?? '').toString(),
       'stock': (p['stock'] is int ? p['stock'] : int.tryParse('${p['stock']}') ?? 0),
       'price_cash': (p['price_cash'] is num ? (p['price_cash'] as num).toDouble() : double.tryParse('${p['price_cash']}') ?? 0.0),
       'price_transfer': (p['price_transfer'] is num ? (p['price_transfer'] as num).toDouble() : double.tryParse('${p['price_transfer']}') ?? 0.0),
-      'foto': p['foto'] ?? '',
+      'foto': (p['foto'] ?? '').toString(),
     });
+  }
+
+  static Future<void> upsertProduct(Map<String, dynamic> p) async {
+    final name = (p['name'] ?? '').toString();
+    if (name.isEmpty) return;
+
+    final existingIndex = _products.keys.firstWhere(
+      (key) {
+        final raw = _products.get(key);
+        final item = _toMapSafe(raw);
+        return (item['name'] ?? '').toString() == name;
+      },
+      orElse: () => null,
+    );
+
+    if (existingIndex != null) {
+      final current = _toMapSafe(_products.get(existingIndex));
+      final updated = <String, dynamic>{
+        ...current,
+        'name': name,
+        'subcategory': (p['subcategory'] ?? current['subcategory'] ?? '').toString(),
+        'stock': (p['stock'] is int ? p['stock'] : int.tryParse('${p['stock']}') ?? (current['stock'] ?? 0)),
+        'price_cash': (p['price_cash'] is num ? (p['price_cash'] as num).toDouble() : double.tryParse('${p['price_cash']}') ?? (current['price_cash'] ?? 0.0)),
+        'price_transfer': (p['price_transfer'] is num ? (p['price_transfer'] as num).toDouble() : double.tryParse('${p['price_transfer']}') ?? (current['price_transfer'] ?? 0.0)),
+        'foto': (p['foto'] ?? current['foto'] ?? '').toString(),
+      };
+      await _products.put(existingIndex, updated);
+      return;
+    }
+
+    await insertProduct(p);
   }
 
   static Future<void> updateProduct(int id, Map<String, dynamic> p) async {
@@ -261,10 +342,11 @@ class DBService {
     final existing = _toMapSafe(existingRaw);
     existing.addAll({
       'name': p['name'] ?? existing['name'],
+      'subcategory': (p['subcategory'] ?? existing['subcategory'] ?? '').toString(),
       'stock': (p['stock'] is int ? p['stock'] : int.tryParse('${p['stock']}') ?? existing['stock'] ?? 0),
       'price_cash': (p['price_cash'] is num ? (p['price_cash'] as num).toDouble() : double.tryParse('${p['price_cash']}') ?? existing['price_cash'] ?? 0.0),
       'price_transfer': (p['price_transfer'] is num ? (p['price_transfer'] as num).toDouble() : double.tryParse('${p['price_transfer']}') ?? existing['price_transfer'] ?? 0.0),
-      'foto': p['foto'] ?? existing['foto'] ?? '',
+      'foto': (p['foto'] ?? existing['foto'] ?? '').toString(),
     });
     await _products.put(id, existing);
   }
@@ -275,6 +357,41 @@ class DBService {
     final current = (product['stock'] ?? 0) is int ? product['stock'] as int : int.tryParse('${product['stock']}') ?? 0;
     product['stock'] = current + qty;
     await _products.put(productId, product);
+  }
+
+  static Future<List<Map<String, dynamic>>> getMovements() async {
+    return getMovementsOfDay();
+  }
+
+  static Future<double> todaySales() async {
+    final sales = await getSalesOfDay();
+    double total = 0;
+    for (final sale in sales) {
+      total += (sale['total'] is num ? (sale['total'] as num).toDouble() : double.tryParse('${sale['total']}') ?? 0.0);
+    }
+    return total;
+  }
+
+  static Future<List<Map<String, dynamic>>> topProducts() async {
+    final items = await getSaleItems();
+    final map = <String, Map<String, dynamic>>{};
+
+    for (final item in items) {
+      final productId = item['product_id'];
+      final product = await getProducts();
+      final productName = product.firstWhere(
+        (p) => p['id'] == productId,
+        orElse: () => {'name': 'Desconocido'},
+      )['name'] ?? 'Desconocido';
+
+      final qty = (item['quantity'] is int) ? item['quantity'] as int : int.tryParse('${item['quantity']}') ?? 0;
+      final entry = map.putIfAbsent(productName, () => {'name': productName, 'total_qty': 0});
+      entry['total_qty'] = (entry['total_qty'] as int? ?? 0) + qty;
+    }
+
+    final result = map.values.toList();
+    result.sort((a, b) => ((b['total_qty'] as int?) ?? 0).compareTo((a['total_qty'] as int?) ?? 0));
+    return result;
   }
 
   static Future<void> removeStock(int productId, int qty) async {
@@ -305,6 +422,7 @@ class DBService {
     String method,
     String user, {
     int? sessionId,
+    List<Map<String, dynamic>>? payments,
   }) async {
     int? sid = sessionId;
     if (sid == null) {
@@ -320,6 +438,7 @@ class DBService {
       'id': id,
       'total': total,
       'method': method,
+      'payments': payments ?? [],
       'user': user,
       'date': DateTime.now().toIso8601String(),
       'session_id': sid,
@@ -341,6 +460,57 @@ class DBService {
       list.add(v);
     }
     return list;
+  }
+
+  static double _toSaleAmount(dynamic value) {
+    if (value is num) return value.toDouble();
+    if (value == null) return 0.0;
+    return double.tryParse(value.toString()) ?? 0.0;
+  }
+
+  static Future<Map<String, double>> getSessionPaymentSummary(int sessionId) async {
+    final summary = <String, double>{
+      'ventas': 0.0,
+      'efectivo': 0.0,
+      'transferencia': 0.0,
+      'tarjeta': 0.0,
+      'total': 0.0,
+    };
+
+    final sales = await getSalesOfSession(sessionId);
+    for (final sale in sales) {
+      final total = _toSaleAmount(sale['total']);
+      summary['ventas'] = (summary['ventas'] ?? 0.0) + total;
+      summary['total'] = (summary['total'] ?? 0.0) + total;
+
+      final rawPayments = sale['payments'];
+      final payments = rawPayments is List ? rawPayments : const <dynamic>[];
+      if (payments.isNotEmpty) {
+        for (final payment in payments) {
+          final paymentMap = _toMapSafe(payment);
+          final method = (paymentMap['method'] ?? '').toString().toLowerCase();
+          final amount = _toSaleAmount(paymentMap['amount']);
+          if (method.contains('efectivo')) {
+            summary['efectivo'] = (summary['efectivo'] ?? 0.0) + amount;
+          } else if (method.contains('transferencia') || method.contains('tarjeta')) {
+            summary['transferencia'] = (summary['transferencia'] ?? 0.0) + amount;
+          }
+        }
+        continue;
+      }
+
+      final method = (sale['method'] ?? '').toString().toLowerCase();
+      if (method.contains('mixto')) {
+        summary['efectivo'] = (summary['efectivo'] ?? 0.0) + total * 0.5;
+        summary['transferencia'] = (summary['transferencia'] ?? 0.0) + total * 0.5;
+      } else if (method.contains('efectivo')) {
+        summary['efectivo'] = (summary['efectivo'] ?? 0.0) + total;
+      } else if (method.contains('transferencia') || method.contains('tarjeta')) {
+        summary['transferencia'] = (summary['transferencia'] ?? 0.0) + total;
+      }
+    }
+
+    return summary;
   }
 
   static Future<List<Map<String, dynamic>>> getSalesOfSession(int sessionId) async {
@@ -373,6 +543,70 @@ class DBService {
     return list;
   }
 
+  static Future<List<Map<String, dynamic>>> getSalesOfOpenSession() async {
+    final open = await getOpenCash();
+    if (open == null) return const <Map<String, dynamic>>[];
+
+    final sessionId = (open['id'] is int) ? open['id'] as int : int.tryParse('${open['id']}') ?? -1;
+    if (sessionId < 0) return const <Map<String, dynamic>>[];
+
+    return getSalesOfSession(sessionId);
+  }
+
+  static Future<Map<String, int>> getProductSalesQtyOfDay() async {
+    final sales = await getSalesOfOpenSession();
+    final saleItems = await getSaleItems();
+    final products = await getProducts();
+    final productNameById = <int, String>{
+      for (final product in products)
+        ((product['id'] is int) ? product['id'] as int : int.tryParse('${product['id']}') ?? -1):
+            (product['name'] ?? '').toString(),
+    };
+    final map = <String, int>{};
+
+    for (final item in saleItems) {
+      final saleId = item['sale_id'];
+      final sale = sales.firstWhere(
+        (entry) => (entry['id'] ?? -1) == saleId,
+        orElse: () => <String, dynamic>{},
+      );
+      if (sale.isEmpty) continue;
+
+      final productId = (item['product_id'] is int)
+          ? item['product_id'] as int
+          : int.tryParse('${item['product_id']}') ?? -1;
+      final productName = productNameById[productId] ?? (item['name'] ?? '').toString();
+      if (productName.isEmpty) continue;
+
+      final qty = (item['quantity'] is int) ? item['quantity'] as int : int.tryParse('${item['quantity']}') ?? 0;
+      map[productName] = (map[productName] ?? 0) + qty;
+    }
+
+    return map;
+  }
+
+  static Future<Map<String, int>> getProductEntriesQtyOfDay() async {
+    final map = <String, int>{};
+    final movements = await getMovementsOfDay();
+    final today = DateTime.now();
+
+    for (final movement in movements) {
+      final date = DateTime.tryParse(movement['date'] ?? '');
+      if (date == null || date.year != today.year || date.month != today.month || date.day != today.day) continue;
+
+      final type = (movement['type'] ?? '').toString().toLowerCase();
+      if (type != 'entrada') continue;
+
+      final productName = (movement['product_name'] ?? '').toString();
+      if (productName.isEmpty) continue;
+
+      final qty = (movement['qty'] is int) ? movement['qty'] as int : int.tryParse('${movement['qty']}') ?? 0;
+      map[productName] = (map[productName] ?? 0) + qty;
+    }
+
+    return map;
+  }
+
   // -------------------------
   // MOVEMENTS
   // -------------------------
@@ -384,19 +618,75 @@ class DBService {
     required String fromUser,
     required String toUser,
     required bool confirmedBySeller,
+    String type = 'transfer',
+    String? productName,
+    String? note,
   }) async {
     final id = _movements.length;
     await _movements.put(id, {
       'id': id,
+      'type': type,
       'product_index': productIndex,
+      'product_name': productName ?? '',
       'from_area': fromAreaId,
       'to_area': toAreaId,
       'qty': qty,
       'from_user': fromUser,
       'to_user': toUser,
       'confirmed_by_seller': confirmedBySeller,
+      'note': note ?? '',
       'date': DateTime.now().toIso8601String(),
     });
+  }
+
+  static Future<void> recordProductEntry({
+    required String productName,
+    required int qty,
+    String user = 'admin',
+    String note = 'Entrada manual',
+  }) async {
+    if (qty <= 0) return;
+
+    final products = await getProducts();
+    final matchIndex = products.indexWhere((p) => (p['name'] ?? '').toString().toLowerCase() == productName.trim().toLowerCase());
+
+    if (matchIndex >= 0) {
+      final existing = products[matchIndex];
+      final currentStock = (existing['stock'] is int) ? existing['stock'] as int : int.tryParse('${existing['stock']}') ?? 0;
+      await updateProduct(matchIndex, {
+        ...existing,
+        'stock': currentStock + qty,
+      });
+    } else {
+      await insertProduct({
+        'name': productName,
+        'subcategory': '',
+        'stock': qty,
+        'price_cash': 0.0,
+        'price_transfer': 0.0,
+        'foto': '',
+      });
+    }
+
+    final productList = await getProducts();
+    final product = productList.firstWhere(
+      (p) => (p['name'] ?? '').toString().toLowerCase() == productName.trim().toLowerCase(),
+      orElse: () => {'id': -1, 'name': productName},
+    );
+    final productId = (product['id'] is int) ? product['id'] as int : int.tryParse('${product['id']}') ?? -1;
+
+    await createMovement(
+      productIndex: productId,
+      fromAreaId: -1,
+      toAreaId: -1,
+      qty: qty,
+      fromUser: user,
+      toUser: user,
+      confirmedBySeller: true,
+      type: 'entrada',
+      productName: productName,
+      note: note,
+    );
   }
 
   static Future<List<Map<String, dynamic>>> getMovementsOfDay() async {
@@ -415,6 +705,13 @@ class DBService {
   // -------------------------
   static Future<int> openCashSession(double fund) async {
     final id = _cashSessions.length;
+    final productsSnapshot = <String, dynamic>{};
+    for (final product in await getProducts()) {
+      final name = (product['name'] ?? '').toString();
+      if (name.isEmpty) continue;
+      productsSnapshot[name] = (product['stock'] is int) ? product['stock'] as int : int.tryParse('${product['stock']}') ?? 0;
+    }
+
     await _cashSessions.put(id, {
       'id': id,
       'open': DateTime.now().toIso8601String(),
@@ -422,8 +719,19 @@ class DBService {
       'fund': fund,
       'final_cash': 0.0,
       'expected_cash': 0.0,
+      'products_start': productsSnapshot,
     });
     return id;
+  }
+
+  static Future<Map<String, dynamic>?> getCashSessionById(int sessionId) async {
+    for (var k in _cashSessions.keys) {
+      final vRaw = _cashSessions.get(k);
+      final v = _toMapSafe(vRaw);
+      final id = (v['id'] is int) ? v['id'] as int : int.tryParse('${v['id']}') ?? k;
+      if (id == sessionId) return v;
+    }
+    return null;
   }
 
   static Future<Map<String, dynamic>?> getOpenCash() async {
@@ -472,5 +780,17 @@ class DBService {
     if (cashCount != null) v['cash_count'] = cashCount;
     if (transferCount != null) v['transfer_count'] = transferCount;
     await _cashSessions.put(id, v);
+  }
+
+  static Future<int> openCash(double fund) async {
+    return openCashSession(fund);
+  }
+
+  static Future<void> closeCash(int id, double finalCash, double expectedCash) async {
+    await closeCashSession(
+      id,
+      finalCash: finalCash,
+      expectedCash: expectedCash,
+    );
   }
 }

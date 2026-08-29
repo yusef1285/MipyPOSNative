@@ -1,4 +1,4 @@
-package com.mipypos.native
+package com.mipypos.app
 
 import android.util.Log
 import io.flutter.embedding.android.FlutterActivity
@@ -7,7 +7,7 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugins.GeneratedPluginRegistrant
 
 class MainActivity: FlutterActivity() {
-    private val CHANNEL = "com.mipypos.native/logic"
+    private val CHANNEL = "com.mipypos.app/logic"
     private var engineRef: FlutterEngine? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {

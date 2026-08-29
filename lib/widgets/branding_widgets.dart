@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 
 class BrandLogo extends StatelessWidget {
@@ -48,6 +49,21 @@ class ProductImage extends StatelessWidget {
 
     if (url!.startsWith('http')) {
       return Image.network(url!, width: size, height: size, fit: BoxFit.cover);
+    }
+
+    if (url!.startsWith('/') || url!.contains('\\')) {
+      return Image.file(
+        File(url!),
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => Image.asset(
+          'assets/productos/placeholder.png',
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+        ),
+      );
     }
 
     return Image.asset(url!, width: size, height: size, fit: BoxFit.cover);

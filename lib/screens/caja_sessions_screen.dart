@@ -85,31 +85,14 @@ class _CajaSessionsScreenState extends State<CajaSessionsScreen> {
   }
 
   void openWizard(Map<String, dynamic> session) async {
-    final ventas = await DBService.getSalesOfSession(session['id']);
-
-    double efectivo = 0.0;
-    double transferencia = 0.0;
-
-    for (var v in ventas) {
-      final method = (v['method'] ?? '').toString().toLowerCase();
-      final total = (v['total'] ?? 0) is num ? (v['total'] as num).toDouble() : double.tryParse('${v['total']}') ?? 0.0;
-      if (method.contains('efectivo')) {
-        efectivo += total;
-      } else if (method.contains('transferencia') || method.contains('tarjeta')) {
-        transferencia += total;
-      }
-    }
-
-    final resumen = {
-      'efectivo': efectivo,
-      'transferencia': transferencia,
-    };
+    final resumen = await DBService.getSessionPaymentSummary(session['id']);
 
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => CajaWizardScreen(
           sessionId: session['id'],
+          sessionData: session,
           resumenVentas: resumen,
         ),
       ),

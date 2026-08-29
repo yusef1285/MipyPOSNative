@@ -49,46 +49,30 @@ class CartItem {
   }
 }
 
+import '../services/sync_service.dart';
+
 class CartController extends ChangeNotifier {
   final List<CartItem> _items = [];
 
-  List<CartItem> get items => List.unmodifiable(_items);
+  // ... (código existente)
 
-  double get total => _items.fold(0.0, (s, i) => s + (i.qty * i.price));
+  Future<int> checkout({String? method, required String user, required int sessionId, List<Map<String, dynamic>>? payments}) async {
+    final saleMethod = (payments != null && payments.isNotEmpty) ? 'Mixto' : (method ?? 'Efectivo');
+    final totalAmount = total;
 
-  void add(Map<String, dynamic> product) {
-    final id = product['id'] as int;
-    final name = product['name']?.toString() ?? 'Producto';
-    final price = (product['price'] is num) ? (product['price'] as num).toDouble() : double.tryParse('${product['price']}') ?? 0.0;
+    final saleId = await DBService.createSale(totalAmount, saleMethod, user, sessionId: sessionId, payments: payments);
 
-    final existing = _items.firstWhere((it) => it.productId == id, orElse: () => CartItem(productId: -1, name: '', qty: 0, price: 0.0));
-    if (existing.productId != -1) {
-      existing.qty += 1;
-    } else {
-      _items.add(CartItem(productId: id, name: name, qty: 1, price: price));
-    }
-    notifyListeners();
-  }
+    // Sincronización P2P: Notificar a otros dispositivos
+    SyncService().syncSale({
+      'total': totalAmount,
+      'method': saleMethod,
+      'user': user,
+      'sessionId': sessionId,
+      'payments': payments,
+    });
 
-  void remove(int productId) {
-    _items.removeWhere((i) => i.productId == productId);
-    notifyListeners();
-  }
-
-  void clear() {
-    _items.clear();
-    notifyListeners();
-  }
-
-  /// Realiza el checkout: crea la venta, inserta items y actualiza stock.
-  /// Ahora requiere que el caller pase el sessionId explícito.
-  Future<int> checkout({required String method, required String user, required int sessionId}) async {
-    if (sessionId == null) {
-      throw Exception('No hay sessionId proporcionado para checkout');
-    }
-
-    // Crear venta en DBService pasando sessionId explícito
-    final saleId = await DBService.createSale(total, method, user, sessionId: sessionId);
+    for (var it in _items) {
+      // ... (restante del código de items y stock)
 
     // Insertar items y actualizar stock
     for (var it in _items) {

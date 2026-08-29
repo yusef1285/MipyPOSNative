@@ -3,9 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../services/db_service.dart';
+import '../services/license_service.dart';
 import '../controllers/auth_controller.dart';
 import '../core/session_manager.dart';
 import 'login_screen.dart';
+
+import 'package:qr_flutter/qr_flutter.dart';
+import '../services/sync_service.dart';
+
+import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import '../services/sync_service.dart';
 
 class ConfigScreen extends StatefulWidget {
   const ConfigScreen({super.key});
@@ -15,72 +23,103 @@ class ConfigScreen extends StatefulWidget {
 }
 
 class _ConfigScreenState extends State<ConfigScreen> {
-  String _appMode = 'primary';
+  String _appMode = 'demo';
   bool _loading = true;
   String? _error;
+  String? _localIp;
+  String _deviceId = "Cargando...";
+  final TextEditingController _licenseCtrl = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _loadMode();
+    _loadInitialData();
   }
 
-  Future<void> _loadMode() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    try {
-      final mode = DBService.getAppMode();
-      setState(() => _appMode = mode);
-    } catch (e) {
-      setState(() => _error = 'Error cargando configuración: $e');
-    } finally {
-      if (mounted) setState(() => _loading = false);
+  Future<void> _loadInitialData() async {
+    final id = await LicenseService.getDeviceIdentifier();
+    final mode = DBService.getAppMode();
+    final license = LicenseService.getLicenseCode() ?? '';
+    _licenseCtrl.text = license;
+
+    if (mounted) {
+      setState(() {
+        _deviceId = id;
+        _appMode = mode;
+        _loading = false;
+      });
     }
+    _initSync();
   }
 
-  Future<void> _setMode(String mode) async {
-    setState(() => _loading = true);
-    try {
-      await DBService.setAppMode(mode);
-      setState(() => _appMode = mode);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Modo cambiado a: $mode')));
-    } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error guardando modo: $e')));
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
-
-  Future<void> _exportData() async {
-    setState(() => _loading = true);
-    try {
-      // Llamada segura a DBService como placeholder para iniciar export.
-      // Reemplaza por tu ExportService.exportAll() si lo tienes.
-      await DBService.getProducts();
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Export iniciado')));
-    } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error exportando: $e')));
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
-
-  Future<void> _logout() async {
+  Future<void> _initSync() async {
     final auth = context.read<AuthController>();
-    final session = context.read<SessionManager>();
-    try {
-      await auth.logout(clearPersist: true);
-      session.clearSession();
-      if (mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-          (route) => false,
-        );
-      }
-    } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error cerrando sesión: $e')));
+    if (auth.isAdmin) {
+      final ip = await SyncService().startServer();
+      if (mounted) setState(() => _localIp = ip);
+    }
+  }
+
+  void _scanQR() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => SizedBox(
+        height: MediaQuery.of(context).size.height * 0.7,
+        child: MobileScanner(
+          onDetect: (capture) {
+            final List<Barcode> barcodes = capture.barcodes;
+            for (final barcode in barcodes) {
+              final ip = barcode.rawValue;
+              if (ip != null) {
+                SyncService().connectToMaster(ip);
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Vinculado a: $ip')),
+                );
+              }
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  void _showQR() {
+    if (_localIp == null) return;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Servidor de Sincronización'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Escanea desde los dispositivos empleados:'),
+            const SizedBox(height: 20),
+            QrImageView(data: _localIp!, size: 200.0),
+            Text('IP: $_localIp', style: const TextStyle(fontWeight: FontWeight.bold)),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cerrar')),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _applyLicense() async {
+    final code = _licenseCtrl.text.trim();
+    await LicenseService.activatePro(code);
+    final isPro = LicenseService.isProActive();
+    
+    if (mounted) {
+      setState(() => _appMode = DBService.getAppMode());
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(isPro ? '¡App Activada! Modo PRO habilitado.' : 'Licencia inválida para este dispositivo.'),
+          backgroundColor: isPro ? Colors.green : Colors.red,
+        ),
+      );
     }
   }
 
@@ -90,22 +129,92 @@ class _ConfigScreenState extends State<ConfigScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Configuración'),
+        title: const Text('Configuración y Licencia'),
         actions: [
-          // Botón Exportar siempre visible
-          IconButton(
-            tooltip: 'Exportar datos',
-            icon: const Icon(Icons.file_download),
-            onPressed: _loading ? null : _exportData,
-          ),
-          // Botón Cerrar sesión siempre visible
-          IconButton(
-            tooltip: 'Cerrar sesión',
-            icon: const Icon(Icons.logout),
-            onPressed: _loading ? null : _logout,
-          ),
+          if (auth.isAdmin && _localIp != null)
+            IconButton(icon: const Icon(Icons.qr_code_2), onPressed: _showQR),
+          if (!auth.isAdmin)
+            IconButton(icon: const Icon(Icons.qr_code_scanner), onPressed: _scanQR),
         ],
       ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Bloque de Licencia
+                  Card(
+                    color: _appMode == 'pro' ? Colors.green.shade50 : Colors.orange.shade50,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              Icon(_appMode == 'pro' ? Icons.verified : Icons.warning, 
+                                   color: _appMode == 'pro' ? Colors.green : Colors.orange),
+                              const SizedBox(width: 10),
+                              Text('Estado: ${_appMode.toUpperCase()}', 
+                                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                            ],
+                          ),
+                          const Divider(),
+                          const Text('ID de Dispositivo (Entregar al instalador):'),
+                          SelectableText(_deviceId, style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.blue)),
+                          const SizedBox(height: 15),
+                          TextField(
+                            controller: _licenseCtrl,
+                            decoration: const InputDecoration(
+                              labelText: 'Código de Activación',
+                              border: OutlineInputBorder(),
+                              fillColor: Colors.white,
+                              filled: true,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: _applyLicense,
+                              child: const Text('ACTIVAR MODO PRO'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  // Opciones de Sincronización
+                  if (!auth.isAdmin)
+                    ListTile(
+                      leading: const Icon(Icons.sync),
+                      title: const Text('Vincular con Caja Principal'),
+                      subtitle: const Text('Escanea el QR del Administrador'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: _scanQR,
+                    ),
+                  // ... Resto de botones de exportación y logout
+
+  // ... (resto del código de dispose, loadMode, etc.)
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = context.watch<AuthController>();
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Configuración'),
+        actions: [
+          if (auth.isAdmin && _localIp != null)
+            IconButton(
+              tooltip: 'Vincular dispositivos',
+              icon: const Icon(Icons.qr_code_2),
+              onPressed: _showQR,
+            ),
+          // ... otros botones
+
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
@@ -127,8 +236,8 @@ class _ConfigScreenState extends State<ConfigScreen> {
                       Row(
                         children: [
                           ElevatedButton(
-                            onPressed: _appMode == 'primary' ? null : () => _setMode('primary'),
-                            child: const Text('Primary'),
+                            onPressed: _appMode == 'demo' ? null : () => _setMode('demo'),
+                            child: const Text('Demo'),
                           ),
                           const SizedBox(width: 8),
                           ElevatedButton(
@@ -136,6 +245,24 @@ class _ConfigScreenState extends State<ConfigScreen> {
                             child: const Text('Pro'),
                           ),
                         ],
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: _licenseCtrl,
+                        decoration: InputDecoration(
+                          labelText: 'Licencia',
+                          hintText: 'PRO-MIPYPOS-2026',
+                          prefixIcon: const Icon(Icons.verified_user),
+                          suffixIcon: IconButton(
+                            icon: const Icon(Icons.check),
+                            onPressed: _applyLicense,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Licencia recomendada: ${LicenseService.recommendedLicense}',
+                        style: Theme.of(context).textTheme.bodySmall,
                       ),
                       const Divider(height: 24),
                       ListTile(

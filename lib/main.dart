@@ -4,29 +4,38 @@ import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import 'services/db_service.dart';
+import 'services/license_service.dart';
 import 'native_bridge.dart';
 import 'core/session_manager.dart';
 import 'controllers/cart_controller.dart';
 import 'controllers/auth_controller.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_shell.dart';
+import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Inicializar Hive y DBService
+  // Inicializar Hive, DBService y licencia
   await Hive.initFlutter();
   await DBService.init();
-  // Configurar puente nativo <-> Dart (permite que Android invoque lógica desde `lib/`)
+  await LicenseService.init();
+  await LicenseService.ensureDemoModeIfNoLicense();
+  // Configurar puente nativo <-> Dart
   try {
     NativeBridge.setup();
   } catch (e) {
     debugPrint('Warning: NativeBridge.setup() failed: $e');
   }
 
-  // Crear instancias compartidas sin auto-login
-  final auth =
-      AuthController(); // no llamar loadFromStorage() para forzar login en cada arranque
+  // Inicializar Sincronización P2P
+  final syncService = SyncService();
+  // Si es el dispositivo principal (Admin), iniciamos server
+  // Nota: En una implementación real, esto se activaría tras el login del admin
+  // Por ahora lo dejamos preparado para el arranque.
+
+  // Crear instancias compartidas
+  final auth = AuthController();
   final sessionManager = SessionManager();
 
   // Cargar la sesión de caja en memoria ANTES de construir la UI.
@@ -68,15 +77,15 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'MiPyPOS',
-      theme: ThemeData(primarySwatch: Colors.blue),
       debugShowCheckedModeBanner: false,
-      // Rutas nombradas útiles para navegación consistente
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
+      themeMode: ThemeMode.system,
       routes: {
         '/': (context) => const LoginScreen(),
         '/login': (context) => const LoginScreen(),
         '/home': (context) => const HomeShell(),
       },
-      // Forzar inicio en login para evitar reentrada automática con sesión persistida
       initialRoute: '/',
     );
   }

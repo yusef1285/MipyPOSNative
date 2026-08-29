@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mipypos_cafeteria/screens/sync_screen.dart';
+import '../screens/sync_screen.dart';
 import '../screens/home_screen.dart';
 import '../screens/products_screen.dart';
 import '../screens/sales_screen.dart';
@@ -21,7 +21,7 @@ class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case home:
-        final role = settings.arguments as String;
+        final role = settings.arguments is String ? settings.arguments as String : 'admin';
         return MaterialPageRoute(
           builder: (_) => HomeScreen(role: role),
         );

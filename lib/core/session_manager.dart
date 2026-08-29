@@ -47,8 +47,29 @@ class SessionManager extends ChangeNotifier {
     }
   }
 
-  /// Cierra la sesión en memoria (no ejecuta cierre completo en DBService).
-  /// Para cierre definitivo usa DBService.closeCashSession desde CierreService.
+  /// Inicia el proceso de cierre. Cualquier usuario (cajero) puede proponerlo.
+  /// Devuelve true si se requiere autorización del administrador.
+  bool requestClose() {
+    return true; // Siempre requiere confirmación final
+  }
+
+  /// Ejecuta el cierre definitivo. SOLO permitido si el usuario que confirma es admin.
+  Future<void> confirmFinalClose({
+    required Map<String, dynamic> adminUser,
+    required double finalCash,
+    required double expectedCash,
+  }) async {
+    if (adminUser['role'] != 'admin') {
+      throw Exception('Autorización denegada: Solo un administrador puede certificar el cierre final.');
+    }
+
+    if (_sessionId != null) {
+      await DBService.closeCash(_sessionId!, finalCash, expectedCash);
+      _sessionId = null;
+      notifyListeners();
+    }
+  }
+
   void clearSession() {
     _sessionId = null;
     notifyListeners();
