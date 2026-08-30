@@ -20,12 +20,12 @@ apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
 android {
     namespace "com.mipypos.app"
-    compileSdk 34
+     compileSdk = 35
 
     defaultConfig {
-        applicationId "com.mipypos.app"
-        minSdk 21
-        targetSdk 34
+        applicationId "com.mipypos.native"
+        minSdk = 21
+        targetSdk = 35
         versionCode 1
         versionName "1.0"
     }
@@ -37,8 +37,8 @@ android {
         }
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
+    kotlin {
+        jvmToolchain(17)
     }
 }
 
