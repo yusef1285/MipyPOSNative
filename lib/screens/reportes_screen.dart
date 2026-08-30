@@ -40,8 +40,8 @@ class _ReportesScreenState extends State<ReportesScreen> {
 
     productos = await DBService.getProducts();
     areas = await DBService.getAreas();
-    ventas = await DBService.getSalesOfDay(); // 🔥 compatible
-    items = await DBService.getSaleItems(); // 🔥 compatible
+    ventas = await DBService.getSalesOfDay();
+    items = await DBService.getSaleItems();
     movimientos = await DBService.getMovementsOfDay();
 
     calcularTotales();
@@ -58,9 +58,6 @@ class _ReportesScreenState extends State<ReportesScreen> {
     totalPorProducto = {};
     totalPorArea = {};
 
-    // -------------------------
-    // Totales por venta
-    // -------------------------
     for (var v in ventas) {
       final total = (v['total'] ?? 0).toDouble();
       final user = v['user'] ?? 'desconocido';
@@ -74,9 +71,6 @@ class _ReportesScreenState extends State<ReportesScreen> {
       totalPorUsuario[user] = (totalPorUsuario[user] ?? 0) + total;
     }
 
-    // -------------------------
-    // Totales por producto
-    // -------------------------
     for (var item in items) {
       final pIndex = item['product_id'];
       final qty = item['quantity'];
@@ -87,9 +81,6 @@ class _ReportesScreenState extends State<ReportesScreen> {
       totalPorProducto[name] = (totalPorProducto[name] ?? 0) + (qty * price);
     }
 
-    // -------------------------
-    // Totales por área
-    // -------------------------
     for (var m in movimientos) {
       final areaName = areas[m['to_area']]['name'];
       final qty = m['qty'];
@@ -100,9 +91,6 @@ class _ReportesScreenState extends State<ReportesScreen> {
     }
   }
 
-  // -------------------------
-  // Filtros
-  // -------------------------
   List<Map<String, dynamic>> aplicarFiltros() {
     return ventas.where((v) {
       final user = v['user'];
@@ -115,9 +103,6 @@ class _ReportesScreenState extends State<ReportesScreen> {
     }).toList();
   }
 
-  // -------------------------
-  // Items de una venta
-  // -------------------------
   List<Map<String, dynamic>> itemsDeVenta(int saleId) {
     return items.where((i) => i['sale_id'] == saleId).toList();
   }
@@ -145,20 +130,21 @@ class _ReportesScreenState extends State<ReportesScreen> {
                   padding: EdgeInsets.only(bottom: 16),
                   child: BrandLogo(height: 56),
                 ),
-                // -------------------------
-                // Filtros
-                // -------------------------
+
                 const Text("Filtros",
-                    style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+
+                // -------------------------
+                // FILTRO USUARIO
+                // -------------------------
                 DropdownButtonFormField<String>(
-                  initialValue: filtroUsuario,
+                  value: filtroUsuario,
                   decoration: const InputDecoration(labelText: "Usuario"),
                   items: [
-                    const DropdownMenuItem(
-                        value: "Todos", child: Text("Todos")),
+                    const DropdownMenuItem(value: "Todos", child: Text("Todos")),
                     ...ventas
                         .map((v) => v['user'])
+                        .where((u) => u != null)
                         .toSet()
                         .map((u) => DropdownMenuItem(
                               value: u,
@@ -167,13 +153,16 @@ class _ReportesScreenState extends State<ReportesScreen> {
                   ],
                   onChanged: (v) => setState(() => filtroUsuario = v!),
                 ),
+
+                // -------------------------
+                // FILTRO MÉTODO
+                // -------------------------
                 DropdownButtonFormField<String>(
-                  initialValue: filtroMetodo,
+                  value: filtroMetodo,
                   decoration: const InputDecoration(labelText: "Método"),
                   items: const [
                     DropdownMenuItem(value: "Todos", child: Text("Todos")),
-                    DropdownMenuItem(
-                        value: "Efectivo", child: Text("Efectivo")),
+                    DropdownMenuItem(value: "Efectivo", child: Text("Efectivo")),
                     DropdownMenuItem(
                         value: "Transferencia", child: Text("Transferencia")),
                   ],
@@ -183,7 +172,7 @@ class _ReportesScreenState extends State<ReportesScreen> {
                 const SizedBox(height: 20),
 
                 // -------------------------
-                // Resumen del día
+                // RESUMEN DEL DÍA
                 // -------------------------
                 Card(
                   child: Padding(
@@ -194,8 +183,7 @@ class _ReportesScreenState extends State<ReportesScreen> {
                         const Text("Resumen del día",
                             style: TextStyle(
                                 fontSize: 18, fontWeight: FontWeight.bold)),
-                        Text(
-                            "Total general: \$${totalGeneral.toStringAsFixed(2)}"),
+                        Text("Total general: \$${totalGeneral.toStringAsFixed(2)}"),
                         Text("Efectivo: \$${totalEfectivo.toStringAsFixed(2)}"),
                         Text(
                             "Transferencia: \$${totalTransferencia.toStringAsFixed(2)}"),
@@ -205,7 +193,7 @@ class _ReportesScreenState extends State<ReportesScreen> {
                 ),
 
                 // -------------------------
-                // Totales por usuario
+                // TOTALES POR USUARIO
                 // -------------------------
                 Card(
                   child: Padding(
@@ -224,7 +212,7 @@ class _ReportesScreenState extends State<ReportesScreen> {
                 ),
 
                 // -------------------------
-                // Totales por producto
+                // TOTALES POR PRODUCTO
                 // -------------------------
                 Card(
                   child: Padding(
@@ -243,7 +231,7 @@ class _ReportesScreenState extends State<ReportesScreen> {
                 ),
 
                 // -------------------------
-                // Totales por área
+                // TOTALES POR ÁREA
                 // -------------------------
                 Card(
                   child: Padding(
@@ -262,14 +250,13 @@ class _ReportesScreenState extends State<ReportesScreen> {
                 ),
 
                 const Text("Ventas filtradas",
-                    style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
 
                 // -------------------------
-                // Ventas filtradas
+                // VENTAS FILTRADAS
                 // -------------------------
                 ...filtradas.map((v) {
-                  final saleId = ventas.indexOf(v); // 🔥 tu lógica original
+                  final saleId = ventas.indexOf(v);
                   final saleItems = itemsDeVenta(saleId);
 
                   return Card(
@@ -300,6 +287,7 @@ class _ReportesScreenState extends State<ReportesScreen> {
                     ),
                   );
                 }),
+
                 const SizedBox(height: 16),
                 const CopyrightText(),
               ],
