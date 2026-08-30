@@ -171,4 +171,191 @@ class _ConfigScreenState extends State<ConfigScreen> {
               ? Center(
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
-                    child: Text(_error!, style: const Text
+                    child: Text(
+                      _error!,
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  ),
+                )
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Card(
+                        color: _appMode == 'pro'
+                            ? Colors.green.shade50
+                            : Colors.orange.shade50,
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    _appMode == 'pro'
+                                        ? Icons.verified
+                                        : Icons.warning,
+                                    color: _appMode == 'pro'
+                                        ? Colors.green
+                                        : Colors.orange,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    'Estado: ${_appMode.toUpperCase()}',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const Divider(),
+                              const Text('ID de Dispositivo (Entregar al instalador):'),
+                              SelectableText(
+                                _deviceId,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.blue,
+                                ),
+                              ),
+                              const SizedBox(height: 15),
+                              TextField(
+                                controller: _licenseCtrl,
+                                decoration: const InputDecoration(
+                                  labelText: 'Código de Activación',
+                                  border: OutlineInputBorder(),
+                                  fillColor: Colors.white,
+                                  filled: true,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: _applyLicense,
+                                  child: const Text('ACTIVAR MODO PRO'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      if (!auth.isAdmin)
+                        ListTile(
+                          leading: const Icon(Icons.sync),
+                          title: const Text('Vincular con Caja Principal'),
+                          subtitle: const Text('Escanea el QR del Administrador'),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: _scanQR,
+                        ),
+
+                      const SizedBox(height: 20),
+
+                      ListTile(
+                        title: const Text('Modo de la aplicación'),
+                        subtitle: Text('Modo actual: $_appMode'),
+                      ),
+                      Row(
+                        children: [
+                        ElevatedButton(
+                          onPressed: _appMode == 'demo' ? null : () => _setMode('demo'),
+                          child: const Text('Demo'),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          onPressed: _appMode == 'pro' ? null : () => _setMode('pro'),
+                          child: const Text('Pro'),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    TextField(
+                      controller: _licenseCtrl,
+                      decoration: InputDecoration(
+                        labelText: 'Licencia',
+                        hintText: 'PRO-MIPYPOS-2026',
+                        prefixIcon: const Icon(Icons.verified_user),
+                        suffixIcon: IconButton(
+                          icon: const Icon(Icons.check),
+                          onPressed: _applyLicense,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Licencia recomendada: ${LicenseService.recommendedLicense}',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+
+                    const Divider(height: 24),
+
+                    ListTile(
+                      title: const Text('Usuario actual'),
+                      subtitle: Text(
+                        auth.user?['user']?.toString() ?? 'No autenticado',
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    ElevatedButton.icon(
+                      onPressed: _logout,
+                      icon: const Icon(Icons.logout),
+                      label: const Text('Cerrar sesión'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        final session = context.read<SessionManager>();
+                        await session.loadSession();
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Sesión recargada')),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Recargar sesión'),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        final cfg = await DBService.getConfig('app_mode');
+                        if (mounted) {
+                          showDialog(
+                            context: context,
+                            builder: (_) => AlertDialog(
+                              title: const Text('Debug config'),
+                              content: Text('app_mode: $cfg'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text('Cerrar'),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.info_outline),
+                      label: const Text('Ver config (debug)'),
+                    ),
+                  ],
+                ),
+              ),
+    );
+  }
+}
