@@ -25,33 +25,37 @@ class AppTheme {
       colorScheme: colorScheme,
       scaffoldBackgroundColor: const Color(0xFFF3F6FB),
       primaryColor: blueSoft,
+
       appBarTheme: const AppBarTheme(
         backgroundColor: deepBlue,
         foregroundColor: white,
         elevation: 0,
         centerTitle: false,
       ),
-      cardTheme: CardThemeData(
+
+      cardTheme: const CardTheme(
         elevation: 0,
         color: white,
-        margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+        margin: EdgeInsets.symmetric(vertical: 6, horizontal: 8),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-          side: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
+          borderRadius: BorderRadius.all(Radius.circular(18)),
+          side: BorderSide(color: Color(0xFFE2E8F0), width: 1),
         ),
       ),
+
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: white,
         surfaceTintColor: Colors.transparent,
-        indicatorColor: const Color(0xFFDBEAFE),
-        labelTextStyle: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) {
+        indicatorColor: MaterialStatePropertyAll(Color(0xFFDBEAFE)),
+        labelTextStyle: MaterialStateProperty.resolveWith((states) {
+          if (states.contains(MaterialState.selected)) {
             return const TextStyle(fontWeight: FontWeight.w700);
           }
           return const TextStyle(fontWeight: FontWeight.w500);
         }),
         elevation: 1,
       ),
+
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: blueSoft,
@@ -67,6 +71,7 @@ class AppTheme {
           ),
         ),
       ),
+
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: emeraldGreen,
@@ -81,6 +86,7 @@ class AppTheme {
           ),
         ),
       ),
+
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: white,
@@ -98,20 +104,24 @@ class AppTheme {
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
+
       listTileTheme: const ListTileThemeData(
         minVerticalPadding: 12,
         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       ),
-      dialogTheme: DialogThemeData(
+
+      dialogTheme: const DialogTheme(
         backgroundColor: white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.all(Radius.circular(20)),
         ),
       ),
+
       textTheme: base.textTheme.apply(
         bodyColor: ink,
         displayColor: ink,
       ),
+
       pageTransitionsTheme: const PageTransitionsTheme(),
     );
   }
@@ -129,31 +139,35 @@ class AppTheme {
     return base.copyWith(
       colorScheme: colorScheme,
       scaffoldBackgroundColor: const Color(0xFF0B1120),
+
       appBarTheme: const AppBarTheme(
         backgroundColor: Color(0xFF111827),
         foregroundColor: white,
         elevation: 0,
       ),
-      cardTheme: CardThemeData(
+
+      cardTheme: const CardTheme(
         elevation: 0,
-        color: const Color(0xFF111827),
-        margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+        color: Color(0xFF111827),
+        margin: EdgeInsets.symmetric(vertical: 6, horizontal: 8),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-          side: const BorderSide(color: Color(0xFF1F2937), width: 1),
+          borderRadius: BorderRadius.all(Radius.circular(18)),
+          side: BorderSide(color: Color(0xFF1F2937), width: 1),
         ),
       ),
+
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: const Color(0xFF111827),
-        indicatorColor: const Color(0xFF1D4ED8),
-        labelTextStyle: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) {
+        indicatorColor: MaterialStatePropertyAll(Color(0xFF1D4ED8)),
+        labelTextStyle: MaterialStateProperty.resolveWith((states) {
+          if (states.contains(MaterialState.selected)) {
             return const TextStyle(fontWeight: FontWeight.w700);
           }
           return const TextStyle(fontWeight: FontWeight.w500);
         }),
         elevation: 1,
       ),
+
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: blueSoft,
@@ -165,6 +179,7 @@ class AppTheme {
           ),
         ),
       ),
+
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: emeraldGreen,
@@ -175,6 +190,7 @@ class AppTheme {
           ),
         ),
       ),
+
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: const Color(0xFF111827),
@@ -192,10 +208,12 @@ class AppTheme {
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
+
       textTheme: base.textTheme.apply(
         bodyColor: white,
         displayColor: white,
       ),
+
       pageTransitionsTheme: const PageTransitionsTheme(),
     );
   }
