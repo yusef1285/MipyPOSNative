@@ -7,19 +7,8 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.2.1'
+        classpath 'com.android.tools.build:gradle:8.7.3'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-    }
-}
-
-plugins {
-    id "com.android.application" version "8.2.1" apply false
-    id "org.jetbrains.kotlin.android" version "1.9.22" apply false
-}
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
     }
 }
 
@@ -27,5 +16,11 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+    }
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
     }
 }

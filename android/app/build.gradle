@@ -23,7 +23,7 @@ android {
      compileSdk = 35
 
     defaultConfig {
-        applicationId "com.mipypos.native"
+        applicationId "com.mipypos.app"
         minSdk = 21
         targetSdk = 35
         versionCode 1
