@@ -261,101 +261,98 @@ class _ConfigScreenState extends State<ConfigScreen> {
                       ),
                       Row(
                         children: [
-                        ElevatedButton(
-                          onPressed: _appMode == 'demo' ? null : () => _setMode('demo'),
-                          child: const Text('Demo'),
-                        ),
-                        const SizedBox(width: 8),
-                        ElevatedButton(
-                          onPressed: _appMode == 'pro' ? null : () => _setMode('pro'),
-                          child: const Text('Pro'),
-                        ),
-                      ],
-                    ),
+                          ElevatedButton(
+                            onPressed:
+                                _appMode == 'demo' ? null : () => _setMode('demo'),
+                            child: const Text('Demo'),
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton(
+                            onPressed:
+                                _appMode == 'pro' ? null : () => _setMode('pro'),
+                            child: const Text('Pro'),
+                          ),
+                        ],
+                      ),
 
-                    const SizedBox(height: 20),
+                      const SizedBox(height: 20),
 
-                    TextField(
-                      controller: _licenseCtrl,
-                      decoration: InputDecoration(
-                        labelText: 'Licencia',
-                        hintText: 'PRO-MIPYPOS-2026',
-                        prefixIcon: const Icon(Icons.verified_user),
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.check),
-                          onPressed: _applyLicense,
+                      TextField(
+                        controller: _licenseCtrl,
+                        decoration: InputDecoration(
+                          labelText: 'Licencia',
+                          hintText: 'PRO-MIPYPOS-2026',
+                          prefixIcon: const Icon(Icons.verified_user),
+                          suffixIcon: IconButton(
+                            icon: const Icon(Icons.check),
+                            onPressed: _applyLicense,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Licencia recomendada: ${LicenseService.recommendedLicense}',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
 
-                    const Divider(height: 24),
+                      const Divider(height: 24),
 
-                    ListTile(
-                      title: const Text('Usuario actual'),
-                      subtitle: Text(
-                        auth.user?['user']?.toString() ?? 'No autenticado',
+                      ListTile(
+                        title: const Text('Usuario actual'),
+                        subtitle: Text(
+                          auth.user?['user']?.toString() ?? 'No autenticado',
+                        ),
                       ),
-                    ),
 
-                    const SizedBox(height: 12),
+                      const SizedBox(height: 12),
 
-                    ElevatedButton.icon(
-                      onPressed: _logout,
-                      icon: const Icon(Icons.logout),
-                      label: const Text('Cerrar sesión'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
+                      ElevatedButton.icon(
+                        onPressed: _logout,
+                        icon: const Icon(Icons.logout),
+                        label: const Text('Cerrar sesión'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                        ),
                       ),
-                    ),
 
-                    const SizedBox(height: 12),
+                      const SizedBox(height: 12),
 
-                    ElevatedButton.icon(
-                      onPressed: () async {
-                        final session = context.read<SessionManager>();
-                        await session.loadSession();
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Sesión recargada')),
-                          );
-                        }
-                      },
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Recargar sesión'),
-                    ),
+                      ElevatedButton.icon(
+                        onPressed: () async {
+                          final session = context.read<SessionManager>();
+                          await session.loadSession();
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Sesión recargada')),
+                            );
+                          }
+                        },
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Recargar sesión'),
+                      ),
 
-                    const SizedBox(height: 12),
+                      const SizedBox(height: 12),
 
-                    ElevatedButton.icon(
-                      onPressed: () async {
-                        final cfg = await DBService.getConfig('app_mode');
-                        if (mounted) {
-                          showDialog(
-                            context: context,
-                            builder: (_) => AlertDialog(
-                              title: const Text('Debug config'),
-                              content: Text('app_mode: $cfg'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: const Text('Cerrar'),
-                                ),
-                              ],
-                            ),
-                          );
-                        }
-                      },
-                      icon: const Icon(Icons.info_outline),
-                      label: const Text('Ver config (debug)'),
-                    ),
-                  ],
+                      ElevatedButton.icon(
+                        onPressed: () async {
+                          final cfg = await DBService.getConfig('app_mode');
+                          if (mounted) {
+                            showDialog(
+                              context: context,
+                              builder: (_) => AlertDialog(
+                                title: const Text('Debug config'),
+                                content: Text('app_mode: $cfg'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text('Cerrar'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+                        },
+                        icon: const Icon(Icons.info_outline),
+                        label: const Text('Ver config (debug)'),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
     );
   }
 }
