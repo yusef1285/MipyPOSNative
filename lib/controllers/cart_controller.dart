@@ -66,12 +66,14 @@ class CartController extends ChangeNotifier {
       }
     }
 
-    items.add(CCartItem(
-      productId: id,
-      name: name,
-      qty: 1,
-      price: price,
-    ));
+    items.add(
+      CartItem(
+        productId: id,
+        name: name,
+        qty: 1,
+        price: price,
+      ),
+    );
 
     notifyListeners();
   }
@@ -124,6 +126,7 @@ class CartController extends ChangeNotifier {
       payments: payments,
     );
 
+    // Sincronización P2P
     SyncService().syncSale({
       'total': totalAmount,
       'method': saleMethod,
@@ -132,6 +135,7 @@ class CartController extends ChangeNotifier {
       'payments': payments,
     });
 
+    // Registrar items y descontar stock
     for (var it in items) {
       final itemMap = it.toMap(saleId);
       await DBService.insertSaleItem(itemMap);
