@@ -44,11 +44,13 @@ class _MovimientosScreenState extends State<MovimientosScreen> {
       final usuario = m['from_user'];
 
       if (filtroUsuario != "Todos" && usuario != filtroUsuario) return false;
+
       if (filtroArea != "Todos" &&
           filtroArea != areaOrigen &&
           filtroArea != areaDestino) {
         return false;
       }
+
       if (filtroProducto != "Todos" && filtroProducto != producto) return false;
 
       return true;
@@ -60,8 +62,7 @@ class _MovimientosScreenState extends State<MovimientosScreen> {
 
     if (auth.user?['role'] != 'seller') {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text("Solo el cajero puede confirmar entradas")),
+        const SnackBar(content: Text("Solo el cajero puede confirmar entradas")),
       );
       return;
     }
@@ -102,7 +103,9 @@ class _MovimientosScreenState extends State<MovimientosScreen> {
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
+                // -------------------------
                 // FILTROS
+                // -------------------------
                 Padding(
                   padding: const EdgeInsets.all(12),
                   child: Column(
@@ -111,7 +114,7 @@ class _MovimientosScreenState extends State<MovimientosScreen> {
                         children: [
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              initialValue: filtroUsuario,
+                              value: filtroUsuario,
                               decoration: const InputDecoration(
                                 labelText: "Usuario",
                               ),
@@ -120,6 +123,7 @@ class _MovimientosScreenState extends State<MovimientosScreen> {
                                     value: "Todos", child: Text("Todos")),
                                 ...movimientos
                                     .map((m) => m['from_user'])
+                                    .where((u) => u != null)
                                     .toSet()
                                     .map((u) => DropdownMenuItem(
                                           value: u,
@@ -134,7 +138,7 @@ class _MovimientosScreenState extends State<MovimientosScreen> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              initialValue: filtroArea,
+                              value: filtroArea,
                               decoration: const InputDecoration(
                                 labelText: "Área",
                               ),
@@ -153,9 +157,11 @@ class _MovimientosScreenState extends State<MovimientosScreen> {
                           ),
                         ],
                       ),
+
                       const SizedBox(height: 12),
+
                       DropdownButtonFormField<String>(
-                        initialValue: filtroProducto,
+                        value: filtroProducto,
                         decoration: const InputDecoration(
                           labelText: "Producto",
                         ),
@@ -177,7 +183,9 @@ class _MovimientosScreenState extends State<MovimientosScreen> {
 
                 const Divider(),
 
+                // -------------------------
                 // LISTA DE MOVIMIENTOS
+                // -------------------------
                 Expanded(
                   child: filtrados.isEmpty
                       ? const Center(child: Text("No hay movimientos hoy"))
