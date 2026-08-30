@@ -9,6 +9,9 @@ class AppTheme {
   static const Color surface = Color(0xFFF8FAFC);
   static const Color surfaceAlt = Color(0xFFE2E8F0);
 
+  // ------------------------------------------------------------
+  // LIGHT THEME
+  // ------------------------------------------------------------
   static ThemeData light() {
     final base = ThemeData.light(useMaterial3: true);
 
@@ -88,7 +91,10 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(blueSoft, width: 1.5),
+          borderSide: const BorderSide(
+            color: blueSoft,
+            width: 1.5,
+          ),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
@@ -111,6 +117,9 @@ class AppTheme {
     );
   }
 
+  // ------------------------------------------------------------
+  // DARK THEME
+  // ------------------------------------------------------------
   static ThemeData dark() {
     final base = ThemeData.dark(useMaterial3: true);
 
@@ -189,7 +198,10 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(blueSoft, width: 1.5),
+          borderSide: const BorderSide(
+            color: blueSoft,
+            width: 1.5,
+          ),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
