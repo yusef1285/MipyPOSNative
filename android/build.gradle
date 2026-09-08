@@ -18,11 +18,3 @@ allprojects {
         mavenCentral()
     }
 }
-
-subprojects {
-    gradle.projectsEvaluated {
-        tasks.withType(JavaCompile) {
-            options.compileArgs.addAll(['--release', '17'])
-        }
-    }
-}
