@@ -19,8 +19,10 @@ allprojects {
     }
 }
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+subprojects {
+    gradle.projectsEvaluated {
+        tasks.withType(JavaCompile) {
+            options.compileArgs.addAll(['--release', '17'])
+        }
     }
 }
