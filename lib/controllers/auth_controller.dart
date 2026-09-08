@@ -10,8 +10,6 @@ class AuthController extends ChangeNotifier {
 
   Map<String, dynamic>? get user => _user;
   bool get isLoading => _loading;
-
-  /// Nuevo getter esperado por main.dart
   bool get isLoggedIn => _user != null;
 
   void _setLoading(bool v) {
@@ -20,7 +18,6 @@ class AuthController extends ChangeNotifier {
   }
 
   /// Carga la sesión desde almacenamiento persistente si existe.
-  /// Usa DBService.getUser para restaurar sin validar contraseña.
   Future<void> loadFromStorage() async {
     _setLoading(true);
     try {
@@ -33,27 +30,24 @@ class AuthController extends ChangeNotifier {
         }
       }
     } catch (_) {
-      // no bloquear la app si no hay persistencia
+      // No bloquear la app si no hay persistencia
     } finally {
       _setLoading(false);
     }
   }
 
   /// login(username, password, {persist:false})
-  /// Si persist=true guarda solo el username en config (Web safe).
   Future<bool> login(String username, String password, {bool persist = false}) async {
     _setLoading(true);
     try {
-      final pass = password ?? '';
-      if (username.isEmpty || pass.isEmpty) {
+      if (username.isEmpty || password.isEmpty) {
         return false;
       }
 
-      final u = await DBService.login(username, pass);
+      final u = await DBService.login(username, password);
       if (u != null) {
         _user = Map<String, dynamic>.from(u);
         if (persist) {
-          // Guardar solo el username para evitar problemas en Web con objetos complejos
           await DBService.putConfig('current_user', username);
         }
         notifyListeners();
@@ -65,7 +59,7 @@ class AuthController extends ChangeNotifier {
     }
   }
 
-  /// Cierra sesión y elimina persistencia si existe.
+  /// Cierra sesión y elimina persistencia
   Future<void> logout({bool clearPersist = true}) async {
     _user = null;
     if (clearPersist) {
@@ -77,5 +71,7 @@ class AuthController extends ChangeNotifier {
   }
 
   bool get isAdmin => _user?['role'] == 'admin';
-  bool get isSupervisor => _user?['role'] == 'supervisor';
+  bool get isSeller => _user?['role'] == 'seller';
+  bool get isStorekeeper => _user?['role'] == 'storekeeper';
+  bool get isGuest => _user?['role'] == 'guest';
 }
